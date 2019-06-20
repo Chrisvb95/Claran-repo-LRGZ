@@ -1,0 +1,36 @@
+CLARAN - Personal Documentation
+
+
+-- VIRTUALenv ---
+
+The virtualenv I set-up to run Claran is called CLARANenv. 
+
+When running the scripts, make sure that $PATH points to: 
+
+/data/s1587064/CLARANenv/bin/python (check using 'which python'). 
+
+More info can be found on: https://www.tutorialspoint.com/python/python_environment.htm 
+
+The packages that need to be installed are the following:
+
+tensorflow-gpu==1
+matplotlib
+numpy
+scipy
+opencv-python==3.2.0.6
+cython
+easydict
+astropy
+Pillow
+pyyaml
+
+-- First time-setup -- 
+
+From Claran-repo, cd lib and then bash Makefile
+
+-- Using the DS-lab computers -- 
+
+Check out available gpu's: nvidia-smi
+Assign a gpu to run a script on: CUDA_VISIBLE_DEVICES=n (n~[0-N])
+
+
