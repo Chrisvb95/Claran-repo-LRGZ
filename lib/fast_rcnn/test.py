@@ -163,7 +163,6 @@ def im_detect(sess, net, im, boxes=None, save_vis_dir=None,
                                         return_inverse=True)
         blobs['rois'] = blobs['rois'][index, :]
         boxes = boxes[index, :]
-
     if cfg.TEST.HAS_RPN:
         im_blob = blobs['data']
         blobs['im_info'] = np.array(
@@ -174,7 +173,7 @@ def im_detect(sess, net, im, boxes=None, save_vis_dir=None,
         feed_dict={net.data: blobs['data'], net.im_info: blobs['im_info'], net.keep_prob: 1.0}
     else:
         feed_dict={net.data: blobs['data'], net.rois: blobs['rois'], net.keep_prob: 1.0}
-
+    
     run_options = None
     run_metadata = None
     if cfg.TEST.DEBUG_TIMELINE:
@@ -182,6 +181,7 @@ def im_detect(sess, net, im, boxes=None, save_vis_dir=None,
         run_metadata = tf.RunMetadata()
 
     #theta_tensor = tf.get_default_graph().get_tensor_by_name('spt_trans_theta')
+    print('Below is the source of the invalid device ordinal error')
     cls_score, cls_prob, bbox_pred, rois = sess.run([net.get_output('cls_score'),
     net.get_output('cls_prob'), net.get_output('bbox_pred'), net.get_output('rois')],
                                                     feed_dict=feed_dict,
@@ -202,7 +202,7 @@ def im_detect(sess, net, im, boxes=None, save_vis_dir=None,
         np.save(os.path.join(save_vis_dir, '%s_conv5_3_f.npy' % img_name), conv5_3_features)
         np.save(os.path.join(save_vis_dir, '%s_st_pool_f.npy' % img_name), st_pool_features)
 
-
+   
     if cfg.TEST.HAS_RPN:
         assert len(im_scales) == 1, "Only single-image batch implemented"
         boxes = rois[:, 1:5] / im_scales[0]
@@ -360,13 +360,12 @@ def test_net(sess, net, imdb, weights_filename , max_per_image=300,
                 # that have the gt_classes field set to 0, which means there's no
                 # ground truth.
                 box_proposals = roidb[i]['boxes'][roidb[i]['gt_classes'] == 0]
-
             im = cv2.imread(imdb.image_path_at(i))
             _t['im_detect'].tic()
             scores, boxes = im_detect(sess, net, im, box_proposals)
             _t['im_detect'].toc()
-
             _t['misc'].tic()
+
             if vis:
                 image = im[:, :, (2, 1, 0)]
                 plt.cla()

@@ -5,6 +5,7 @@
 # Written by Ross Girshick
 #
 # Modified by Chen Wu (chen.wu@icrar.org)
+# Modified by Christiaan van Buchem (vbuchem@strw.leidenuniv.nl)
 # --------------------------------------------------------
 
 """Train a Fast R-CNN network."""
@@ -19,6 +20,7 @@ import tensorflow as tf
 import sys
 from tensorflow.python.client import timeline
 import time
+import csv
 
 
 class SolverWrapper(object):
@@ -206,6 +208,7 @@ class SolverWrapper(object):
         last_snapshot_iter = -1
         timer = Timer()
         check_thres = max_iters * 0.8
+        loss_tracker = []
         for iter in range(start_iter, start_iter + max_iters):
             # get one batch
             blobs = data_layer.forward()
@@ -242,6 +245,7 @@ class SolverWrapper(object):
                 trace_file.close()
 
             total_loss = rpn_loss_cls_value + rpn_loss_box_value + loss_cls_value + loss_box_value
+            loss_tracker.append(total_loss)
             if (iter + 1) % (cfg.TRAIN.DISPLAY) == 0:
                 print 'iter: %d / %d, total loss: %.4f, rpn_loss_cls: %.4f, rpn_loss_box: %.4f, loss_cls: %.4f, loss_box: %.4f, lr: %f' %\
                     (iter + 1, max_iters + start_iter, total_loss,
@@ -255,12 +259,19 @@ class SolverWrapper(object):
                 # visually
                 print("Culprit found %s, %.4f" % (blobs['img_id'], total_loss))
 
-            if (iter + 1) % cfg.TRAIN.SNAPSHOT_ITERS == 0:
+            #if (iter + 1) % cfg.TRAIN.SNAPSHOT_ITERS == 0:
+            if (iter + 1) % 1000 == 0:
                 last_snapshot_iter = iter
                 self.snapshot(sess, iter)
 
         if last_snapshot_iter != iter:
             self.snapshot(sess, iter)
+
+        # Added in order to plot loss
+        with open('loss_track.csv','wb') as myfile:
+            wr = csv.writer(myfile,quoting=csv.QUOTE_ALL)
+            wr.writerow(loss_tracker)
+
 
 
 def get_training_roidb(imdb):
@@ -301,6 +312,7 @@ def filter_roidb(roidb):
         #   (1) At least one foreground RoI OR
         #   (2) At least one background RoI
         overlaps = entry['max_overlaps']
+        #print('overlaps',overlaps[0])
         # find boxes with sufficient overlap
         fg_inds = np.where(overlaps >= cfg.TRAIN.FG_THRESH)[0]
         # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
@@ -312,6 +324,7 @@ def filter_roidb(roidb):
 
     num = len(roidb)
     filtered_roidb = [entry for entry in roidb if is_valid(entry)]
+
     num_after = len(filtered_roidb)
     print 'Filtered {} roidb entries: {} -> {}'.format(num - num_after,
                                                        num, num_after)

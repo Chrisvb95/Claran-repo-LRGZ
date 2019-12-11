@@ -12,6 +12,7 @@ import os
 import uuid
 import cPickle
 import numpy as np
+import pickle
 
 from datasets.imdb import imdb
 from datasets.pascal_voc import pascal_voc
@@ -30,8 +31,12 @@ class rgz(pascal_voc):
         self._devkit_path = self._get_default_path() if devkit_path is None \
             else devkit_path
         self._data_path = os.path.join(self._devkit_path, 'RGZ' + self._year)
+        #self._classes = ('__background__',  # always index 0
+        #                 '1_1', '1_2', '1_3', '2_2', '2_3', '3_3')
+        #self._classes = ('__background__',  # always index 0
+        #                 '1', '2', '3', '4', '5')
         self._classes = ('__background__',  # always index 0
-                         '1_1', '1_2', '1_3', '2_2', '2_3', '3_3')
+                         '1', '2', '3')
         self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))
         self._image_ext = '.png'
         self._image_index = self._load_image_set_index()
@@ -50,7 +55,7 @@ class rgz(pascal_voc):
                        'min_size': 2}
 
         assert os.path.exists(self._devkit_path), \
-            'RGZdevkit path does not exist: {}'.format(self._devkit_path)
+            'LRGZdevkit path does not exist: {}'.format(self._devkit_path)
         assert os.path.exists(self._data_path), \
             'Path does not exist: {}'.format(self._data_path)
 
@@ -77,7 +82,7 @@ class rgz(pascal_voc):
         path = os.path.join(
             self._devkit_path,
             'results',
-            'RGZ' + self._year,
+            'LRGZ' + self._year,
             'Main',
             filename)
         return path
@@ -101,14 +106,56 @@ class rgz(pascal_voc):
         print 'VOC07 metric? ' + ('Yes' if use_07_metric else 'No')
         if not os.path.isdir(output_dir):
             os.mkdir(output_dir)
+
+        
+        ovthresh = np.arange(0,1,0.01)
+        aps_save = np.zeros((len(ovthresh),4))
+
+        '''
+        for t in range(len(ovthresh)):
+            aps = []
+            print('IoU thresh:',ovthresh[t])
+            print('~~~~~~~~')
+            for i, cls in enumerate(self._classes):
+                if cls == '__background__':
+                    continue
+                filename = self._get_voc_results_file_template().format(cls)
+                rec, prec, ap = voc_eval(
+                    filename, annopath, imagesetfile, cls, cachedir, ovthresh=ovthresh[t],
+                    use_07_metric=use_07_metric)
+                aps += [ap]
+                print('AP for {} = {:.4f}'.format(cls, ap))
+                with open(os.path.join(output_dir, cls + '_pr.pkl'), 'w') as f:
+                    cPickle.dump({'rec': rec, 'prec': prec, 'ap': ap}, f)
+            print('Mean AP = {:.4f}'.format(np.mean(aps)))
+            print('~~~~~~~~')
+            print('Results:')
+            for i in range(len(aps)):
+                print('{:.3f}'.format(aps[i]))
+                aps_save[t][i] = aps[i]
+            print('{:.3f}'.format(np.mean(aps)))
+            aps_save[t][3] = np.mean(aps)
+            print('~~~~~~~~')
+            print('')
+
+        np.savetxt("mAPvsIoU.csv", aps_save, delimiter=",")
+        
+        '''
+        
+        recs = []
+        precs = []
         for i, cls in enumerate(self._classes):
             if cls == '__background__':
                 continue
             filename = self._get_voc_results_file_template().format(cls)
             rec, prec, ap = voc_eval(
-                filename, annopath, imagesetfile, cls, cachedir, ovthresh=0.5,
+                filename, annopath, imagesetfile, cls, cachedir, ovthresh=0.50,
                 use_07_metric=use_07_metric)
             aps += [ap]
+            np.savetxt('rec'+str(i)+'.csv',rec,delimiter=',')
+            np.savetxt('prec'+str(i)+'.csv',prec,delimiter=',')
+            recs.append(rec)
+            precs.append(precs)
             print('AP for {} = {:.4f}'.format(cls, ap))
             with open(os.path.join(output_dir, cls + '_pr.pkl'), 'w') as f:
                 cPickle.dump({'rec': rec, 'prec': prec, 'ap': ap}, f)
@@ -120,3 +167,19 @@ class rgz(pascal_voc):
         print('{:.3f}'.format(np.mean(aps)))
         print('~~~~~~~~')
         print('')
+        
+        #print(recs)
+        #print(precs)
+
+        #for i in range(len(recs)):
+        #    rec = np.array(recs[i]
+
+        #with open('recall_v_precision.csv','w') as fd:
+        #    fd.write(recs)
+        #    fd.write(precs)
+        #    fd.close()
+
+        #with open('ap_vs_it.csv','a') as fd:
+        #    fd.write(str(aps)+'\n')
+        #    fd.close()
+        

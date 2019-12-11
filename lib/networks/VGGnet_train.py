@@ -3,7 +3,7 @@ from networks.network import Network
 
 from fast_rcnn.config import cfg
 
-n_classes = 7
+n_classes = 4
 
 
 class VGGnet_train(Network):

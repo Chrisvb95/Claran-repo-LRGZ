@@ -81,14 +81,13 @@ if __name__ == '__main__':
     print('Using config:')
     pprint.pprint(cfg)
 
-    if not args.randomize:
+    #if not args.randomize:
         # fix the random seeds (numpy and caffe) for reproducibility
-        np.random.seed(cfg.RNG_SEED)
+    np.random.seed(cfg.RNG_SEED)
     imdb = get_imdb(args.imdb_name) # Used to check if the imdb is know (see factory.py)
     print(imdb)
     print 'Loaded dataset `{:s}` for training'.format(imdb.name)
     roidb = get_training_roidb(imdb)
-    print('Region of interest database: (ROID)')
     print('Number of regions:', len(roidb))
     #print(roidb)
 

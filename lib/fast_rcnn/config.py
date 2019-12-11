@@ -82,7 +82,7 @@ __C.TRAIN.BG_THRESH_HI = 0.5
 __C.TRAIN.BG_THRESH_LO = 0.1
 
 # Use horizontally-flipped images during training?
-__C.TRAIN.USE_FLIPPED = False # Changed in initial test
+__C.TRAIN.USE_FLIPPED = True # Changed in initial test
 
 # Train bounding-box regressors
 __C.TRAIN.BBOX_REG = True
@@ -92,7 +92,7 @@ __C.TRAIN.BBOX_REG = True
 __C.TRAIN.BBOX_THRESH = 0.5
 
 # Iterations between snapshots
-__C.TRAIN.SNAPSHOT_ITERS = 5000
+__C.TRAIN.SNAPSHOT_ITERS = 1000
 
 # solver.prototxt specifies the snapshot path prefix, this adds an optional
 # infix to yield the path: <prefix>[_<infix>]_iters_XYZ.caffemodel
@@ -262,9 +262,10 @@ if spawn.find_executable("nvcc"):
 
     # Default GPU device id
     __C.GPU_ID = 0
+    print('USE GPU NMS - True')
 else:
     __C.USE_GPU_NMS = False
-
+    print('USE GPU NMS - True')
 
 def get_output_dir(imdb, weights_filename):
     """Return the directory where experimental artifacts are placed.

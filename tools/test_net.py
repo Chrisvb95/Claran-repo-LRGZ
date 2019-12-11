@@ -20,6 +20,7 @@ import argparse
 import pprint
 import time, os, sys
 import tensorflow as tf
+import numpy as np
 
 def parse_args():
     """
@@ -74,14 +75,52 @@ if __name__ == '__main__':
     # while not os.path.exists(args.model) and args.wait:
     #     print('Waiting for {} to exist...'.format(args.model))
     #     time.sleep(10)
+    print(args.model)
 
-    weights_filename = os.path.splitext(os.path.basename(args.model))[0]
+    checkpoints = np.arange(1000,100100,1000)
 
     imdb = get_imdb(args.imdb_name)
     imdb.competition_mode(args.comp_mode)
-
     network = get_network(args.network_name)
     print 'Use network `{:s}` in training'.format(args.network_name)
+
+    '''
+    for i in range(len(checkpoints)):
+        weights_name = '/data/s1587064/Claran-repo-LRGZ//output/faster_rcnn_end2end/rgz_2017_trainD3/VGGnet_fast_rcnn-'+str(checkpoints[i])
+        print 'Testing weights from checkpoint: ', checkpoints[i]
+        
+        args.model = weights_name
+
+        weights_filename = os.path.splitext(os.path.basename(args.model))[0]
+
+        
+        if args.device == 'gpu':
+            cfg.USE_GPU_NMS = True
+            cfg.GPU_ID = args.device_id
+            device_name = '/{}:{:d}'.format(args.device, args.device_id)
+            print(device_name)
+        else:
+            cfg.USE_GPU_NMS = False
+
+        # start a session
+        saver = tf.train.Saver()
+        sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
+        saver.restore(sess, args.model)
+        print ('Loading model weights from {:s}').format(args.model)
+
+        test_net(sess, network, imdb, weights_filename,
+                 thresh=args.thresh, force=args.force)
+
+
+    '''
+
+    weights_filename = os.path.splitext(os.path.basename(args.model))[0]
+
+    #imdb = get_imdb(args.imdb_name)
+    #imdb.competition_mode(args.comp_mode)
+
+    #network = get_network(args.network_name)
+    #print 'Use network `{:s}` in training'.format(args.network_name)
 
     if args.device == 'gpu':
         cfg.USE_GPU_NMS = True
@@ -99,3 +138,4 @@ if __name__ == '__main__':
 
     test_net(sess, network, imdb, weights_filename,
              thresh=args.thresh, force=args.force)
+    

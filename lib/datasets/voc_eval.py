@@ -124,7 +124,7 @@ def voc_eval(detpath,
             recs = cPickle.load(f)
         try:
             recs[imagenames[0]]
-            recs[imagenames[10]]
+            #recs[imagenames[10]]
         except KeyError as ke:
             print(str(ke))
             recs = compute_recs()
@@ -133,10 +133,14 @@ def voc_eval(detpath,
     class_recs = {}
     npos = 0
     for imagename in imagenames:
+        # Grabs all objects in an image that belong to the given class
         R = [obj for obj in recs[imagename] if obj['name'] == classname]
+        # Grabs all bounding boxes
         bbox = np.array([x['bbox'] for x in R])
+        # Grabs all difficult labels
         difficult = np.array([x['difficult'] for x in R]).astype(np.bool)
         det = [False] * len(R)
+        # Number of sources that are NOT difficult
         npos = npos + sum(~difficult)
         class_recs[imagename] = {'bbox': bbox,
                                  'difficult': difficult,
@@ -161,8 +165,8 @@ def voc_eval(detpath,
 
         # go down dets and mark TPs and FPs
         nd = len(image_ids)
-        tp = np.zeros(nd)
-        fp = np.zeros(nd)
+        tp = np.zeros(nd) # true positive
+        fp = np.zeros(nd) # false positive
         for d in range(nd):
             R = class_recs[image_ids[d]]
             bb = BB[d, :].astype(float)
@@ -185,6 +189,7 @@ def voc_eval(detpath,
                        (BBGT[:, 2] - BBGT[:, 0] + 1.) *
                        (BBGT[:, 3] - BBGT[:, 1] + 1.) - inters)
 
+                
                 overlaps = inters / uni
                 ovmax = np.max(overlaps)
                 jmax = np.argmax(overlaps)
@@ -211,5 +216,10 @@ def voc_eval(detpath,
          rec = -1
          prec = -1
          ap = -1
-
+    print '~~~~~~~~'
+    #print 'Recall:', len(rec), rec
+    #print 'Precision:', len(prec) , prec
+    #print 'Average precision:', ap
+    print 'True positives:', tp[-1]
+    print 'False positives:', fp[-1]
     return rec, prec, ap
